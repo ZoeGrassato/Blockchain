@@ -15,12 +15,26 @@ class Block {
         this.data = data;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
+        this.nonce = 0;
     }
 
     calculateHash() {
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    }
+
+    //difficulty increases the computing time needed to meet the requirement of the hash
+    //the more zeros difficulty has, the harder it is to compute
+    mineBlock(difficulty) {
+        //we create an array with zeros that is exactly the number of difficulty
+        while (this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
+            this.nonce++;
+            this.hash = this.calculateHash();
+        }
+        console.log(this.hash);
     }
 }
+
+
 
 //this is the block chain
 class Blockchain {
