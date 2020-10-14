@@ -34,7 +34,7 @@ class Block {
 
     //difficulty increases the computing time needed to meet the requirement of the hash
     //the more zeros the difficulty has, the harder it is to compute
-    mineBlock(difficulty) {
+    mineBlock(difficulty) { //this it to create a new block
         //we create an array with zeros that is exactly the number of difficulty
         while (this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
             this.nonce++;
@@ -73,12 +73,33 @@ class Blockchain {
     minePendingTransactions(miningRewardAddress) { //this is to add to the blockchain
         let block = new Block(Date.now(), this.pendingTransactions);
         block.mineBlock(this.difficulty); //mine for a hash in alignment with our difficulty
-
+        console.log("block has been mined");
         this.chain.push(block);
 
         this.pendingTransactions = [
-            new Transaction(null, miningRewardAddress, this.miningReward);
-        ]
+            new Transaction(null, miningRewardAddress, this.miningReward)
+        ];
+    }
+
+    createTransaction(transaction) {
+        this.pendingTransactions.push(transaction);
+    }
+
+    getBalanceOfAddress(address) {
+        let balance = 0;
+
+        for (const block of this.chain) {
+            for (const trans of block.transactions) {
+                if (trans.fromAddress === address) {
+                    balance -= trans.amount;
+                }
+                if (trans.toAddress === address) {
+                    balance += trans.amount;
+                }
+            }
+        }
+
+        return balance;
     }
 
     isChainValid() {
@@ -102,6 +123,23 @@ class Blockchain {
 
 let coin = new Blockchain();
 
-coin.addBlock(new Block(1, '10/10/2020', { amount: 4 }));
-coin.addBlock(new Block(2, '10/9/2020', { amount: 1 }));
+coin.createTransaction(new Transaction('address1', 'address2', 100))
+//at this point the transactions are still pending and we need to mine to actually add to the blockchain
+
+//now we are minin/adding to the blockchain
+console.log('mining transactions....');
+coin.minePendingTransactions('zoe');
+
+//now lets see what the balance of that address is
+balance = coin.getBalanceOfAddress('zoe');
+console.log(balance);
+
+//now we are minin/adding to the blockchain
+console.log('mining transactions again....');
+coin.minePendingTransactions('zoe');
+
+balance = coin.getBalanceOfAddress('zoe');
+console.log(balance);
+
+
 
