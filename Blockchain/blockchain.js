@@ -27,20 +27,22 @@ class Transaction {
             throw Error('You cant sign this transaction')
         }
 
-        const hashTx = this.calculateHash();
-        const sig = signingKey.sign(hashTx, 'base64');
+        const hashTx = this.calculateHash(); //hash to sign
+        const sig = signingKey.sign(hashTx, 'base64'); //here we sign using the hash
         this.signature = sig.toDER('hex');
     }
 
     isValid(){
         if(this.fromAddress === null) return true;
 
+        //check that there is a signature
         if(!this.signature || this.signature.length === 0){
-            throw Error('No signature in this transaction');
+            throw new Error('No signature in this transaction');
         }
-
+        //check that the signature is as it should be 
         const publicKey = ec.keyFromPublic(this.fromAddress, 'hex');
         return publicKey.verify(this.calculateHash(), this.signature);
+        //here we verify that this hashed was signed with the signature given for this entry
     }
 }
 
@@ -71,6 +73,13 @@ class Block {
             this.hash = this.calculateHash();
         }
         console.log(this.hash);
+    }
+
+    hasValidTransactions(){
+        for(const tx of this.transactions){
+            if (!tx.isValid) return false;
+        }
+        return true;
     }
 }
 
@@ -111,7 +120,14 @@ class Blockchain {
         ];
     }
 
-    createTransaction(transaction) {
+    addTransaction(transaction) {
+        if(!transaction.fromAddress || !transaction.toAddress){
+            throw new Error("");
+        }
+
+        if(!this.transaction.isValid()){
+            throw new Error("");
+        }
         this.pendingTransactions.push(transaction);
     }
 
@@ -137,6 +153,7 @@ class Blockchain {
             const currentBlock = this.chain[i];
             const previousBlock = this.chain[i - 1];
 
+            if(!currentBlock.hasValidTransactions()) return false;
             //is the hash correct
             if (currentBlock.hash !== currentBlock.calculateHash()) {
                 return false;
